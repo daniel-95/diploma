@@ -17,7 +17,7 @@ void cuda_surf(char *fileName) {
 
 	cv::Mat mFrame;
 	GpuMat frame, features, descriptors;
-	SURF_CUDA surf(	/*_hessianThreshold,*/ 20000,
+	SURF_CUDA surf(	/*_hessianThreshold,*/ 11000,
 		/*_nOctaves =*/ 4,
 		/*_nOctaveLayers =*/ 2,
 		/*_extended =*/ false,
@@ -59,7 +59,7 @@ void cuda_surf(char *fileName) {
 		if(pTracker->ready()) {
 			// drawing paths
 			auto steps = pTracker->getSteps();
-			std::cout << "number of tracks: " << steps.size() << std::endl;
+			std::cout << std::endl << "number of tracks: " << steps.size() << std::endl;
 
 			// initialize next path search
 			std::vector<cv::KeyPoint> keypoints;
@@ -74,7 +74,7 @@ void cuda_surf(char *fileName) {
 			pTracker->makeStep(mFrame);
 		}
 
-		std::cout << "elapsed time: " << timegap << "; featured found: " << features.cols << std::endl;
+		std::cout << "elapsed time: " << timegap << "; featured found: " << features.cols;
 	}
 }
 

@@ -1,0 +1,32 @@
+[INFO] Harris + BRIEF on CPU
+[INFO] features tracked: 9
+elapsed time: 0.315133; featured found: 95[INFO] features tracked: 9
+elapsed time: 0.310377; featured found: 22[INFO] features tracked: 9
+elapsed time: 0.322775; featured found: 2[INFO] features tracked: 9
+elapsed time: 0.287382; featured found: 2[INFO] features tracked: 9
+elapsed time: 0.351825; featured found: 2[INFO] features tracked: 9
+elapsed time: 0.337164; featured found: 1[INFO] features tracked: 9
+elapsed time: 0.32122; featured found: 63[INFO] features tracked: 9
+elapsed time: 0.299263; featured found: 6[INFO] features tracked: 9
+elapsed time: 0.350229; featured found: 1[INFO] features tracked: 9
+elapsed time: 0.304832; featured found: 1[INFO] features tracked: 9
+elapsed time: 0.276865; featured found: 1[INFO] features tracked: 9
+elapsed time: 0.323826; featured found: 1[INFO] features tracked: 9
+elapsed time: 0.23389; featured found: 6[INFO] features tracked: 9
+elapsed time: 0.358784; featured found: 1[INFO] features tracked: 9
+elapsed time: 0.464885; featured found: 1[INFO] features tracked: 9
+elapsed time: 0.400612; featured found: 1[INFO] features tracked: 9
+elapsed time: 0.386809; featured found: 1[INFO] features tracked: 8
+elapsed time: 0.386665; featured found: 1[INFO] features tracked: 8
+elapsed time: 0.450527; featured found: 235[INFO] features tracked: 8
+elapsed time: 0.41495; featured found: 47[INFO] features tracked: 8
+elapsed time: 0.346914; featured found: 21[INFO] features tracked: 8
+elapsed time: 0.344247; featured found: 189[INFO] features tracked: 8
+elapsed time: 0.342489; featured found: 4[INFO] features tracked: 8
+elapsed time: 0.336568; featured found: 1[INFO] features tracked: 8
+elapsed time: 0.346977; featured found: 313[INFO] features tracked: 8
+elapsed time: 0.335645; featured found: 3[INFO] features tracked: 8
+elapsed time: 0.348053; featured found: 3[INFO] features tracked: 8
+elapsed time: 0.346603; featured found: 1[INFO] features tracked: 8
+elapsed time: 0.34988; featured found: 1[INFO] features tracked: 7
+elapsed time: 0.347674; featured found: 3[INFO] features tracked: 6

@@ -12,7 +12,7 @@ void cpu_brisk(char *fileName) {
 	int nWinSize = 11;
 
 	auto pTracker = std::make_unique<Track::FeatureTracker>(nFrames, nWinSize);		
-	cv::Ptr<cv::BRISK> BRISKDetector = cv::BRISK::create(/*threshold*/150);
+	cv::Ptr<cv::BRISK> BRISKDetector = cv::BRISK::create(/*threshold*/100);
 	cv::Mat frame, grayed, descriptors;
 	std::vector<cv::KeyPoint> features;
 
@@ -48,7 +48,7 @@ void cpu_brisk(char *fileName) {
 		if(pTracker->ready()) {
 			// drawing paths
 			auto steps = pTracker->getSteps();
-			std::cout << "number of tracks: " << steps.size() << std::endl;
+			std::cout << std::endl << "number of tracks: " << steps.size() << std::endl;
 
 			// initialize next path search
 			std::vector<cv::Point2f> vfKeypoints;
@@ -61,7 +61,7 @@ void cpu_brisk(char *fileName) {
 			pTracker->makeStep(grayed);
 		}
 
-		std::cout << "elapsed time: " << timegap << "; featured found: " << features.size() << std::endl;
+		std::cout << "elapsed time: " << timegap << "; featured found: " << features.size();
 	}
 }
 

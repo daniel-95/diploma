@@ -14,7 +14,7 @@ void cpu_surf(char *fileName) {
 	int nWinSize = 11;
 
 	auto pTracker = std::make_unique<Track::FeatureTracker>(nFrames, nWinSize);
-	cv::Ptr<cv::xfeatures2d::SurfFeatureDetector> SURFDetector = cv::xfeatures2d::SurfFeatureDetector::create(20000);
+	cv::Ptr<cv::xfeatures2d::SurfFeatureDetector> SURFDetector = cv::xfeatures2d::SurfFeatureDetector::create(11000);
 	cv::Mat frame, grayed, descriptors;
 	std::vector<cv::KeyPoint> features;
 
@@ -50,7 +50,7 @@ void cpu_surf(char *fileName) {
 		if(pTracker->ready()) {
 			// drawing paths
 			auto steps = pTracker->getSteps();
-			std::cout << "number of tracks: " << steps.size() << std::endl;
+			std::cout << std::endl << "number of tracks: " << steps.size() << std::endl;
 
 			// initialize next path search
 			std::vector<cv::Point2f> vfKeypoints;
@@ -63,7 +63,7 @@ void cpu_surf(char *fileName) {
 			pTracker->makeStep(grayed);
 		}
 
-		std::cout << "elapsed time: " << timegap << "; featured found: " << features.size() << std::endl;
+		std::cout << "elapsed time: " << timegap << "; featured found: " << features.size();
 	}
 }
 

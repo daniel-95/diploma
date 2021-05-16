@@ -49,7 +49,7 @@ void opencl_orb(char *fileName) {
 		if(pTracker->ready()) {
 			// drawing paths
 			auto steps = pTracker->getSteps();
-			std::cout << "number of tracks: " << steps.size() << std::endl;
+			std::cout << std::endl << "number of tracks: " << steps.size() << std::endl;
 
 			// initialize next path search
 			std::vector<cv::Point2f> vfKeypoints;
@@ -62,7 +62,7 @@ void opencl_orb(char *fileName) {
 			pTracker->makeStep(grayed.getMat(cv::ACCESS_READ));
 		}
 
-		std::cout << "elapsed time: " << timegap << "; featured found: " << features.size() << std::endl;
+		std::cout << "elapsed time: " << timegap << "; featured found: " << features.size();
 	}
 }
 

@@ -1,6 +1,8 @@
 #ifndef __DECLARATIONS_HPP
 #define __DECLARATIONS_HPP
 
+typedef void (*fea_det)(char*);
+
 void cuda_surf(char *filename);
 void cpu_surf(char *fileName);
 void opencl_surf(char *filename);

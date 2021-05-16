@@ -31,7 +31,6 @@ bool FeatureTracker::makeStep(const cv::Mat& nextFrame) {
 
 	for(auto& step : m_vSteps) {
 		int i = 0;
-		std::cout << "[SIZE] " << step.size() << std::endl;
 		for(auto it = step.begin(); it != step.end() && i < featuresFound.size(); i++) {
 			if(featuresFound[i] == 0)
 				it = step.erase(it);

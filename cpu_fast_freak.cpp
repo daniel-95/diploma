@@ -64,7 +64,7 @@ void cpu_fast_freak(char *fileName) {
 		if(pTracker->ready()) {
 			// drawing paths
 			auto steps = pTracker->getSteps();
-			std::cout << "number of tracks: " << steps.size() << std::endl;
+			std::cout << std::endl << "number of tracks: " << steps.size() << std::endl;
 
 			// initialize next path search
 			std::vector<cv::Point2f> vfKeypoints;
@@ -77,7 +77,7 @@ void cpu_fast_freak(char *fileName) {
 			pTracker->makeStep(grayed);
 		}
 
-		std::cout << "elapsed time: " << timegap << "; featured found: " << keypoints.size() << std::endl;
+		std::cout << "elapsed time: " << timegap << "; featured found: " << keypoints.size();
 	}
 }
 
