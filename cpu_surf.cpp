@@ -1,5 +1,6 @@
 #include "diploma.hpp"
 #include "track.hpp"
+#include <opencv2/flann.hpp>
 
 using namespace cv::cuda;
 
@@ -15,17 +16,18 @@ void cpu_surf(char *fileName) {
 
 	auto pTracker = std::make_unique<Track::FeatureTracker>(nFrames, nWinSize);
 	cv::Ptr<cv::xfeatures2d::SurfFeatureDetector> SURFDetector = cv::xfeatures2d::SurfFeatureDetector::create(11000);
-	cv::Mat frame, grayed, descriptors;
-	std::vector<cv::KeyPoint> features;
+	cv::Mat frame, frameClone, grayed, descriptors, oldDescriptors;
+	std::vector<cv::KeyPoint> keypoints, oldKeypoints;
+	cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::FLANNBASED);
 
 	std::cout << "[INFO] SURF on CPU" << std::endl;
 
 	while(cap.read(frame)) {
-		features.clear();
+		keypoints.clear();
 		cv::cvtColor(frame, grayed, cv::COLOR_RGB2GRAY);
 
 		uint64_t t0 = cv::getTickCount();
-		SURFDetector->detectAndCompute(grayed, cv::noArray(), features, descriptors);
+		SURFDetector->detectAndCompute(grayed, cv::noArray(), keypoints, descriptors);
 		uint64_t t1 = cv::getTickCount();
 
 		double timegap = (t1*1.0 - t0) / cv::getTickFrequency();
@@ -35,35 +37,29 @@ void cpu_surf(char *fileName) {
 			continue;
 		}
 
-		if(pTracker->empty()) {
-			std::vector<cv::Point2f> vfKeypoints;
-
-			for(auto p : features)
-				vfKeypoints.emplace_back(p.pt.x, p.pt.y);
-
-			// init the tracker with it
-			pTracker->init(vfKeypoints, grayed);
+		if(oldKeypoints.empty()) {
+			oldKeypoints = keypoints;
+			keypoints.clear();
+			oldDescriptors = descriptors.clone();
 			continue;
 		}
 
-		// if there are NFRAMES steps
-		if(pTracker->ready()) {
-			// drawing paths
-			auto steps = pTracker->getSteps();
-			std::cout << std::endl << "number of tracks: " << steps.size() << std::endl;
+		std::vector<std::vector<cv::DMatch>> vKnnMatches;
+		std::vector<cv::DMatch> dmMatches;
+		matcher->knnMatch(oldDescriptors, descriptors, vKnnMatches, 2 );
 
-			// initialize next path search
-			std::vector<cv::Point2f> vfKeypoints;
-
-			for(auto p : features)
-				vfKeypoints.emplace_back(p.pt.x, p.pt.y);
-
-			pTracker->init(vfKeypoints, grayed);
-		} else {
-			pTracker->makeStep(grayed);
+		//-- Filter matches using the Lowe's ratio test
+		const float ratio_thresh = 0.7f;
+		for (size_t i = 0; i < vKnnMatches.size(); i++) {
+			if (vKnnMatches[i][0].distance < ratio_thresh * vKnnMatches[i][1].distance) {
+				dmMatches.push_back(vKnnMatches[i][0]);
+			}
 		}
 
-		std::cout << "elapsed time: " << timegap << "; featured found: " << features.size();
+		std::cout << "elapsed time: " << timegap << "; featured found: " << keypoints.size() << "; features tracked: " << dmMatches.size() << std::endl;
+		oldKeypoints = keypoints;
+		oldDescriptors = descriptors.clone();
+		keypoints.clear();
 	}
 }
 

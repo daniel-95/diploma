@@ -1,5 +1,6 @@
 #include "diploma.hpp"
 #include "track.hpp"
+#include <opencv2/flann.hpp>
 
 void cpu_shi_tomasi_brief(char *fileName) {
 	cv::VideoCapture cap(fileName);
@@ -8,8 +9,8 @@ void cpu_shi_tomasi_brief(char *fileName) {
 		return;
 	}
 
-	cv::Mat frame, grayed, descriptors;
-	std::vector<cv::KeyPoint> keypoints;
+	cv::Mat frame, grayed, descriptors, oldDescriptors;
+	std::vector<cv::KeyPoint> keypoints, oldKeypoints;
 
 	int blockSize = 4;
 	double maxOverlap = 0.0;
@@ -20,25 +21,25 @@ void cpu_shi_tomasi_brief(char *fileName) {
 	int nFrames = 50;
 	int nWinSize = 11;
 
-	auto pTracker = std::make_unique<Track::FeatureTracker>(nFrames, nWinSize);		
 	cv::Ptr<cv::DescriptorExtractor> extractor = cv::xfeatures2d::BriefDescriptorExtractor::create(32, false);
-	cv::Mat dst, dst_norm, dst_norm_scaled;
+	cv::FlannBasedMatcher matcher(new cv::flann::LshIndexParams(20, 10, 2));
+	cv::Mat frameClone, dst, dst_norm, dst_norm_scaled;
+//	cv::Ptr<cv::DescriptorMatcher> pMatcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::FLANNBASED);
 
 	std::cout << "[INFO] Shi-Tomasi + BRIEF on CPU" << std::endl;
 
 	while(cap.read(frame)) {
-		cv::cvtColor(frame, grayed, cv::COLOR_RGB2GRAY);
+		frameClone = frame.clone();
+		cv::cvtColor(frame, grayed, cv::COLOR_BGR2GRAY);
 		dst = cv::Mat::zeros(grayed.size(), CV_32FC1);
-		keypoints.clear();
 
-		
 		int maxCorners = grayed.rows * grayed.cols / std::max(1.0, minDistance);
 		std::vector<cv::Point2f> corners;
 
 		uint64_t t0 = cv::getTickCount();
 
 		cv::goodFeaturesToTrack(grayed, corners, maxCorners, qualityLevel, minDistance,
-			cv::Mat(), blockSize, useHarrisDetector, k);
+				cv::Mat(), blockSize, useHarrisDetector, k);
 
 		for (auto it = corners.begin(); it != corners.end(); ++it) {
 			cv::KeyPoint newKeyPoint;
@@ -47,7 +48,26 @@ void cpu_shi_tomasi_brief(char *fileName) {
 			keypoints.push_back(newKeyPoint);
 		}
 
-		extractor->compute(grayed, keypoints, descriptors);
+		extractor->compute(frameClone, keypoints, descriptors);
+
+		if(oldKeypoints.empty()) {
+			oldKeypoints = keypoints;
+			keypoints.clear();
+			oldDescriptors = descriptors.clone();
+			continue;
+		}
+
+		std::vector<std::vector<cv::DMatch>> vKnnMatches;
+		std::vector<cv::DMatch> dmMatches;
+		matcher.knnMatch(oldDescriptors, descriptors, vKnnMatches, 2 );
+
+		//-- Filter matches using the Lowe's ratio test
+		const float ratio_thresh = 0.7f;
+		for (size_t i = 0; i < vKnnMatches.size(); i++) {
+			if (vKnnMatches[i][0].distance < ratio_thresh * vKnnMatches[i][1].distance) {
+				dmMatches.push_back(vKnnMatches[i][0]);
+			}
+		}
 
 		uint64_t t1 = cv::getTickCount();
 
@@ -58,35 +78,10 @@ void cpu_shi_tomasi_brief(char *fileName) {
 			continue;
 		}
 
-		if(pTracker->empty()) {
-			std::vector<cv::Point2f> vfKeypoints;
-
-			for(auto p : keypoints)
-				vfKeypoints.emplace_back(p.pt.x, p.pt.y);
-
-			// init the tracker with it
-			pTracker->init(vfKeypoints, grayed);
-			continue;
-		}
-
-		// if there are NFRAMES steps
-		if(pTracker->ready()) {
-			// drawing paths
-			auto steps = pTracker->getSteps();
-			std::cout << std::endl << "number of tracks: " << steps.size() << std::endl;
-
-			// initialize next path search
-			std::vector<cv::Point2f> vfKeypoints;
-
-			for(auto p : keypoints)
-				vfKeypoints.emplace_back(p.pt.x, p.pt.y);
-
-			pTracker->init(vfKeypoints, grayed);
-		} else {
-			pTracker->makeStep(grayed);
-		}
-
-		std::cout << "elapsed time: " << timegap << "; featured found: " << keypoints.size();
+		std::cout << "elapsed time: " << timegap << "; featured found: " << keypoints.size() << "; features tracked: " << dmMatches.size() << std::endl;
+		oldKeypoints = keypoints;
+		oldDescriptors = descriptors.clone();
+		keypoints.clear();
 	}
 }
 

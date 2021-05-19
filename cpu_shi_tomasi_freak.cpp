@@ -1,5 +1,6 @@
 #include "diploma.hpp"
 #include "track.hpp"
+#include <opencv2/flann.hpp>
 
 void cpu_shi_tomasi_freak(char *fileName) {
 	cv::VideoCapture cap(fileName);
@@ -8,8 +9,8 @@ void cpu_shi_tomasi_freak(char *fileName) {
 		return;
 	}
 
-	cv::Mat frame, grayed, descriptors;
-	std::vector<cv::KeyPoint> keypoints;
+	cv::Mat frame, grayed, descriptors, oldDescriptors;
+	std::vector<cv::KeyPoint> keypoints, oldKeypoints;
 
 	int blockSize = 4;
 	double maxOverlap = 0.0;
@@ -28,6 +29,7 @@ void cpu_shi_tomasi_freak(char *fileName) {
 	auto pTracker = std::make_unique<Track::FeatureTracker>(nFrames, nWinSize);		
 	cv::Ptr<cv::DescriptorExtractor> extractor = cv::xfeatures2d::FREAK::create(
 		orientationNormalized, scaleNormalized, patternScale, nOctaves);
+	cv::FlannBasedMatcher matcher(new cv::flann::LshIndexParams(20, 10, 2));
 	cv::Mat dst, dst_norm, dst_norm_scaled;
 
 	std::cout << "[INFO] Shi-Tomasi + FREAK on CPU" << std::endl;
@@ -54,6 +56,25 @@ void cpu_shi_tomasi_freak(char *fileName) {
 
 		extractor->compute(grayed, keypoints, descriptors);
 
+		if(oldKeypoints.empty()) {
+			oldKeypoints = keypoints;
+			keypoints.clear();
+			oldDescriptors = descriptors.clone();
+			continue;
+		}
+
+		std::vector<std::vector<cv::DMatch>> vKnnMatches;
+		std::vector<cv::DMatch> dmMatches;
+		matcher.knnMatch(oldDescriptors, descriptors, vKnnMatches, 2 );
+
+		//-- Filter matches using the Lowe's ratio test
+		const float ratio_thresh = 0.7f;
+		for (size_t i = 0; i < vKnnMatches.size(); i++) {
+			if (vKnnMatches[i][0].distance < ratio_thresh * vKnnMatches[i][1].distance) {
+				dmMatches.push_back(vKnnMatches[i][0]);
+			}
+		}
+
 		uint64_t t1 = cv::getTickCount();
 
 		double timegap = (t1*1.0 - t0) / cv::getTickFrequency();
@@ -63,40 +84,11 @@ void cpu_shi_tomasi_freak(char *fileName) {
 			continue;
 		}
 
-		if(descriptors.empty()) {
-			std::cout << "[WARNING] no descriptors" << std::endl;
-			continue;
-		}
+		std::cout << "elapsed time: " << timegap << "; featured found: " << keypoints.size() << "; features tracked: " << dmMatches.size() << std::endl;
+		oldKeypoints = keypoints;
+		oldDescriptors = descriptors.clone();
+		keypoints.clear();
 
-		if(pTracker->empty()) {
-			std::vector<cv::Point2f> vfKeypoints;
-
-			for(auto p : keypoints)
-				vfKeypoints.emplace_back(p.pt.x, p.pt.y);
-
-			// init the tracker with it
-			pTracker->init(vfKeypoints, grayed);
-			continue;
-		}
-
-		// if there are NFRAMES steps
-		if(pTracker->ready()) {
-			// drawing paths
-			auto steps = pTracker->getSteps();
-			std::cout << std::endl << "number of tracks: " << steps.size() << std::endl;
-
-			// initialize next path search
-			std::vector<cv::Point2f> vfKeypoints;
-
-			for(auto p : keypoints)
-				vfKeypoints.emplace_back(p.pt.x, p.pt.y);
-
-			pTracker->init(vfKeypoints, grayed);
-		} else {
-			pTracker->makeStep(grayed);
-		}
-
-		std::cout << "elapsed time: " << timegap << "; featured found: " << keypoints.size();
 	}
 }
 

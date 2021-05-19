@@ -1,0 +1,18 @@
+[INFO] Shi-Tomasi + BRIEF on CPU
+elapsed time: 0.0472374; featured found: 8; features tracked: 7
+elapsed time: 0.0480429; featured found: 7; features tracked: 6
+elapsed time: 0.0461085; featured found: 5; features tracked: 4
+elapsed time: 0.0496828; featured found: 17; features tracked: 5
+elapsed time: 0.0485549; featured found: 10; features tracked: 9
+elapsed time: 0.0532726; featured found: 6; features tracked: 5
+elapsed time: 0.0514306; featured found: 7; features tracked: 6
+elapsed time: 0.0453253; featured found: 12; features tracked: 7
+elapsed time: 0.0479584; featured found: 15; features tracked: 10
+elapsed time: 0.0456949; featured found: 13; features tracked: 9
+elapsed time: 0.0483061; featured found: 28; features tracked: 12
+elapsed time: 0.0448143; featured found: 7; features tracked: 9
+elapsed time: 0.0481223; featured found: 10; features tracked: 6
+elapsed time: 0.052632; featured found: 28; features tracked: 10
+elapsed time: 0.0476094; featured found: 7; features tracked: 11
+elapsed time: 0.045589; featured found: 10; features tracked: 6
+elapsed time: 0.0473801; featured found: 11; features tracked: 7

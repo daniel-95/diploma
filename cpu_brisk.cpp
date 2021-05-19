@@ -1,5 +1,6 @@
 #include "diploma.hpp"
 #include "track.hpp"
+#include <opencv2/flann.hpp>
 
 void cpu_brisk(char *fileName) {
 	cv::VideoCapture cap(fileName);
@@ -13,17 +14,17 @@ void cpu_brisk(char *fileName) {
 
 	auto pTracker = std::make_unique<Track::FeatureTracker>(nFrames, nWinSize);		
 	cv::Ptr<cv::BRISK> BRISKDetector = cv::BRISK::create(/*threshold*/100);
-	cv::Mat frame, grayed, descriptors;
-	std::vector<cv::KeyPoint> features;
-
+	cv::Mat frame, frameClone, grayed, descriptors, oldDescriptors;
+	std::vector<cv::KeyPoint> keypoints, oldKeypoints;
+	cv::FlannBasedMatcher matcher(new cv::flann::LshIndexParams(20, 10, 2));
 	std::cout << "[INFO] BRISK on CPU" << std::endl;
 
 	while(cap.read(frame)) {
-		features.clear();
+		keypoints.clear();
 		cv::cvtColor(frame, grayed, cv::COLOR_RGB2GRAY);
 
 		uint64_t t0 = cv::getTickCount();
-		BRISKDetector->detectAndCompute(grayed, cv::noArray(), features, descriptors);
+		BRISKDetector->detectAndCompute(grayed, cv::noArray(), keypoints, descriptors);
 		uint64_t t1 = cv::getTickCount();
 
 		double timegap = (t1*1.0 - t0) / cv::getTickFrequency();
@@ -33,35 +34,22 @@ void cpu_brisk(char *fileName) {
 			continue;
 		}
 
-		if(pTracker->empty()) {
-			std::vector<cv::Point2f> vfKeypoints;
+		std::vector<std::vector<cv::DMatch>> vKnnMatches;
+		std::vector<cv::DMatch> dmMatches;
+		matcher.knnMatch(oldDescriptors, descriptors, vKnnMatches, 2 );
 
-			for(auto p : features)
-				vfKeypoints.emplace_back(p.pt.x, p.pt.y);
-
-			// init the tracker with it
-			pTracker->init(vfKeypoints, grayed);
-			continue;
+		//-- Filter matches using the Lowe's ratio test
+		const float ratio_thresh = 0.7f;
+		for (size_t i = 0; i < vKnnMatches.size(); i++) {
+			if (vKnnMatches[i][0].distance < ratio_thresh * vKnnMatches[i][1].distance) {
+				dmMatches.push_back(vKnnMatches[i][0]);
+			}
 		}
 
-		// if there are NFRAMES steps
-		if(pTracker->ready()) {
-			// drawing paths
-			auto steps = pTracker->getSteps();
-			std::cout << std::endl << "number of tracks: " << steps.size() << std::endl;
-
-			// initialize next path search
-			std::vector<cv::Point2f> vfKeypoints;
-
-			for(auto p : features)
-				vfKeypoints.emplace_back(p.pt.x, p.pt.y);
-
-			pTracker->init(vfKeypoints, grayed);
-		} else {
-			pTracker->makeStep(grayed);
-		}
-
-		std::cout << "elapsed time: " << timegap << "; featured found: " << features.size();
+		std::cout << "elapsed time: " << timegap << "; featured found: " << keypoints.size() << "; features tracked: " << dmMatches.size() << std::endl;
+		oldKeypoints = keypoints;
+		oldDescriptors = descriptors.clone();
+		keypoints.clear();
 	}
 }
 
