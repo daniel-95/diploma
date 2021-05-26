@@ -1,0 +1,18 @@
+stereo:
+brisk - not bad, 60-100ms
+surf cpu bad
+surf cuda bad
+surf opencl bad
+orb cpu bad
+orb cuda GREAT 30-45ms
+orb opencl bad
+
+icy_scarp:
+brisk - 10-30ms
+surf cpu bad
+surf cuda not bad 50-70ms
+surf opencl not bad 50-70ms
+orb cpu 80-100ms
+orb cuda GREAT 10-16ms
+orb opencl bad
+
